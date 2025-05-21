@@ -78,7 +78,7 @@ jobs:
           DB_PASSWORD: laisa1234
 
       - name: Rodar testes
-        run: php artisan test --verbose
+        run: php artisan test
         working-directory: ./app
         env:
           DB_CONNECTION: mysql
