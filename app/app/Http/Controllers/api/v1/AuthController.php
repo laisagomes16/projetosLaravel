@@ -9,6 +9,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 use Illuminate\Support\Facades\Hash;
+use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Str;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 
 class AuthController extends Controller
@@ -21,10 +24,13 @@ class AuthController extends Controller
             return response()->json(['error' => 'Acesso invalido, verifique o login ou clique para se cadastrar'], 401);
         }
 
+        $user = Auth::guard('api')->user();
+
         return response()->json([
             'access_token' => $token,
             'token_type' => 'bearer',
             'expires_in' => Auth::guard('api')->factory()->getTTL() * 60,
+            'user' => $user,
         ]);
     }
 
@@ -52,5 +58,55 @@ class AuthController extends Controller
         ]);
 
         return response()->json(['message' => 'Usuário criado com sucesso', 'user' => $user], 201);
+    }
+
+    public function loginWithGoogle(Request $request)
+    {
+        try {
+            $googleUser = Socialite::driver('google')->stateless()->userFromToken($request->token);
+
+            $user = User::firstOrCreate(
+                ['email' => $googleUser->getEmail()],
+                [
+                    'name' => $googleUser->getName(),
+                    'provider' => 'google',
+                    'provider_id' => $googleUser->getId(),
+                    'password' => Hash::make(Str::random(24)), // senha aleatória
+                ]
+            );
+
+            $token = JWTAuth::fromUser($user);
+
+            return response()->json([
+                'access_token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => JWTAuth::factory()->getTTL() * 60,
+                'user' => $user
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Erro ao autenticar com Google: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function refresh()
+    {
+        return $this->respondWithToken(auth()->refresh());
+    }
+
+    public function userProfile()
+    {
+        return response()->json(auth()->user());
+    }
+
+    protected function respondWithToken($token)
+    {
+        return response()->json([
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => JWTAuth::factory()->getTTL() * 60,
+            'user' => auth()->user()
+        ]);
     }
 }
