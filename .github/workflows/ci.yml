@@ -23,7 +23,7 @@ jobs:
           --health-cmd="mysqladmin ping -h 127.0.0.1" 
           --health-interval=10s 
           --health-timeout=5s 
-          --health-retries=3
+          --health-retries=5
 
     steps:
       - name: Checkout código
@@ -42,6 +42,15 @@ jobs:
 
       - name: Copiar .env
         run: cp .env.example .env
+        working-directory: ./app
+
+      - name: Configurar ambiente do banco
+        run: |
+          sed -i 's/DB_HOST=.*/DB_HOST=127.0.0.1/' .env
+          sed -i 's/DB_PORT=.*/DB_PORT=3306/' .env
+          sed -i 's/DB_DATABASE=.*/DB_DATABASE=projetos_laravel/' .env
+          sed -i 's/DB_USERNAME=.*/DB_USERNAME=laisa/' .env
+          sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=laisa1234/' .env
         working-directory: ./app
 
       - name: Gerar chave da aplicação
