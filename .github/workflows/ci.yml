@@ -1,0 +1,55 @@
+name: Laravel CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: projetos_laravel
+          MYSQL_USER: laisa
+          MYSQL_PASSWORD: laisa1234
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v3
+
+      - name: Instalar PHP e dependências
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: 8.2
+          extensions: mbstring, pdo, mysql
+          coverage: none
+
+      - name: Instalar dependências do Laravel
+        run: composer install --no-progress --prefer-dist
+
+      - name: Copiar .env
+        run: cp .env.example .env
+
+      - name: Gerar chave da aplicação
+        run: php artisan key:generate
+
+      - name: Aguardar banco de dados
+        run: |
+          echo "Esperando o MySQL subir..."
+          until mysqladmin ping -h127.0.0.1 -ulaisa -plaisa1234 --silent; do
+            sleep 1
+          done
+
+      - name: Rodar migrations
+        run: php artisan migrate --force
+
+      - name: Rodar testes
+        run: php artisan test

@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+    app:
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: projetos_laravel_app
+        working_dir: /var/www/app
+        command: >
+            sh -c "
+              chown -R www-data:www-data storage bootstrap/cache &&
+              chmod -R 775 storage bootstrap/cache &&
+              php-fpm
+            "
+        volumes:
+            - ./app:/var/www/app
+            - ./php.ini:/usr/local/etc/php/conf.d/custom.ini
+        networks:
+            - laravel
+
+    webserver:
+        image: nginx:alpine
+        container_name: projetos_laravel_server
+        ports:
+            - "8080:80"
+        volumes:
+            - ./nginx/conf.d:/etc/nginx/conf.d
+            - ./app:/var/www/app:ro
+        depends_on:
+            - app
+        networks:
+            - laravel
+
+    db:
+        image: mysql:8.0
+        container_name: projetos_laravel_db
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: rootpassword
+            MYSQL_DATABASE: projetos_laravel
+            MYSQL_USER: laisa
+            MYSQL_PASSWORD: laisa1234
+        ports:
+            - "3307:3306"
+        volumes:
+            - dbdata:/var/lib/mysql
+        networks:
+            - laravel
+
+volumes:
+    dbdata:
+
+networks:
+    laravel:
