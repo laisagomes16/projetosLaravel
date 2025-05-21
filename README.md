@@ -4,3 +4,6 @@ docker-compose build --no-cache = builda os containers\
 docker compose up = sobe os containers\
 docker exec -it projetos_laravel_app php artisan migrate = pra criar as migrations no container app\
 docker exec -it projetos_laravel_app php artisan db:seed = pra criar dados ficticios\
+Usuario criado
+'name' => 'Test User',
+'email' => 'test@example.com'
