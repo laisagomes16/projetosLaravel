@@ -38,20 +38,20 @@ jobs:
 
       - name: Instalar dependências do Laravel
         run: composer install --no-progress --prefer-dist
-        working-directory: ./projetosLaravel/app
+        working-directory: ./app
 
       - name: Copiar .env
         run: cp .env.example .env
-        working-directory: ./projetosLaravel/app
+        working-directory: ./app
 
       - name: Gerar chave da aplicação
         run: php artisan key:generate
-        working-directory: ./projetosLaravel/app
+        working-directory: ./app
 
       - name: Rodar migrations
         run: php artisan migrate --force
-        working-directory: ./projetosLaravel/app
+        working-directory: ./app
 
       - name: Rodar testes
         run: php artisan test
-        working-directory: ./projetosLaravel/app
+        working-directory: ./app
