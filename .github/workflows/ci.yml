@@ -20,7 +20,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -32,12 +32,14 @@ jobs:
       DB_DATABASE: projetos_laravel_test
       DB_USERNAME: laisa
       DB_PASSWORD: laisa1234
+      APP_ENV: testing
+      APP_DEBUG: true
 
     steps:
       - name: Checkout código
         uses: actions/checkout@v3
 
-      - name: Instalar PHP e dependências
+      - name: Instalar PHP e extensões
         uses: shivammathur/setup-php@v2
         with:
           php-version: 8.2
@@ -46,19 +48,22 @@ jobs:
 
       - name: Instalar dependências do Laravel
         run: composer install --no-progress --prefer-dist
-        working-directory: ./app
 
-      - name: Copiar .env
-        run: cp .env.example .env
-        working-directory: ./app
+      - name: Copiar .env.testing para .env
+        run: cp .env.testing .env
 
       - name: Gerar chave da aplicação
         run: php artisan key:generate
-        working-directory: ./app
+
+      - name: Aguardar MySQL ficar pronto
+        run: |
+          for i in {1..10}; do
+            mysqladmin ping -h 127.0.0.1 --silent && break
+            echo "Esperando MySQL..."
+            sleep 5
+          done
 
       - name: Rodar migrations
-        run: php artisan migrate --force
-        working-directory: ./app
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -66,10 +71,9 @@ jobs:
           DB_DATABASE: projetos_laravel_test
           DB_USERNAME: laisa
           DB_PASSWORD: laisa1234
+        run: php artisan migrate --force
 
       - name: Rodar testes
-        run: php artisan test
-        working-directory: ./app
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
@@ -77,3 +81,4 @@ jobs:
           DB_DATABASE: projetos_laravel_test
           DB_USERNAME: laisa
           DB_PASSWORD: laisa1234
+        run: php artisan test --verbose
