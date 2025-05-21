@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class ProjectTest extends TestCase
 {
-    //use RefreshDatabase;
+    use RefreshDatabase;
     /**
      * A basic feature test example.
      */

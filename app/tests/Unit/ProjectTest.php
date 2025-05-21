@@ -18,7 +18,7 @@ class ProjectTest extends TestCase
 
     public function test_project_request_valid()
     {
-        $data = ['name' => 'Projeto A', 'descricao' => 'Descrição breve'];
+        $data = ['nome' => 'Projeto A', 'descricao' => 'Descrição breve'];
         $request = new ProjectFormRequest();
         $rules = $request->rules();
 
@@ -33,6 +33,6 @@ class ProjectTest extends TestCase
         $rules = $request->rules();
 
         $validator = Validator::make($data, $rules);
-        $this->assertTrue($validator->fails());
+        $this->assertFalse($validator->passes());
     }
 }
