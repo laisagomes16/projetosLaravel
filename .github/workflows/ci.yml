@@ -51,8 +51,14 @@ jobs:
         working-directory: ./app
 
       - name: Copiar .env.testing para .env
-        run: cp .env.testing .env
-        working-directory: ./app
+          run: cp .env.testing .env
+          working-directory: ./app
+
+            - name: Gerar APP_KEY e JWT_SECRET no .env
+              run: |
+                php artisan key:generate --ansi
+                php -r "file_put_contents('.env', preg_replace('/JWT_SECRET=.*/', 'JWT_SECRET=' . bin2hex(random_bytes(32)), file_get_contents('.env')));" || echo "JWT_SECRET=" >> .env
+              working-directory: ./app
 
       - name: Gerar chave da aplicação
         run: php artisan key:generate
